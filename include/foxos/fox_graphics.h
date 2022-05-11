@@ -27,9 +27,9 @@ static inline void fox_set_background(uint32_t colour) {
 	uint64_t bytes_per_scanline = global_fb.width * 4;
 	uint64_t fb_height = global_fb.height;
 
-	for (int vertical_scanline = 0; vertical_scanline < fb_height; vertical_scanline ++){
+	for (int vertical_scanline = 0; vertical_scanline < fb_height; vertical_scanline ++) {
 		uint64_t pix_ptr_base = base + (bytes_per_scanline * vertical_scanline);
-		for (uint32_t* pixPtr = (uint32_t*)pix_ptr_base; pixPtr < (uint32_t*)(pix_ptr_base + bytes_per_scanline); pixPtr ++){
+		for (uint32_t* pixPtr = (uint32_t*)pix_ptr_base; pixPtr < (uint32_t*)(pix_ptr_base + bytes_per_scanline); pixPtr ++) {
 			*pixPtr = colour;
 		}
 	}
@@ -62,16 +62,24 @@ static inline void fox_free_framebuffer() {
 	global_fb_ptr = NULL;
 }
 
+static inline void fox_set_px_unsafe(uint32_t x, uint32_t y, uint32_t colour) {
+	*(uint32_t*)((uint64_t) global_fb_ptr + (x * 4) + (y * 4 * global_fb.width)) = colour;
+}
+
 static inline void fox_set_px(uint32_t x, uint32_t y, uint32_t colour) {
-	if (x < 0 || x >= global_fb.width || y < 0 || y >= global_fb.height) {
+	if (x >= global_fb.width || y >= global_fb.height) {
 		return;
 	}
 
 	*(uint32_t*)((uint64_t) global_fb_ptr + (x * 4) + (y * 4 * global_fb.width)) = colour;
 }
 
-static inline void fox_set_px_unsafe(uint32_t x, uint32_t y, uint32_t colour) {
-	*(uint32_t*)((uint64_t) global_fb_ptr + (x * 4) + (y * 4 * global_fb.width)) = colour;
+static inline void fox_draw_rect_unsafe(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t colour) {
+	for (uint32_t j = 0; j < height; j++) {
+		for (uint32_t i = 0; i < width; i++) {
+			fox_set_px_unsafe(i + x, j + y, colour);
+		}
+	}
 }
 
 static inline void fox_draw_rect(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t colour) {
@@ -86,20 +94,7 @@ static inline void fox_draw_rect(uint32_t x, uint32_t y, uint32_t width, uint32_
 		height = global_fb.height - y;
 	}
 
-	if (x < 0 && x + width > 0) {
-		width -= x;
-		x = 0;
-	}
-	if (y < 0 && y + height > 0) {
-		height -= y;
-		y = 0;
-	}
-
-	for (uint32_t j = 0; j < height; j++) {
-		for (uint32_t i = 0; i < width; i++) {
-			fox_set_px_unsafe(i + x, j + y, colour);
-		}
-	}
+	fox_draw_rect_unsafe(x, y, width, height, colour);
 }
 
 static inline void fox_draw_rect_outline(uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t colour) {
