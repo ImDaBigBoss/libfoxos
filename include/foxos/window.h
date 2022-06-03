@@ -15,8 +15,6 @@ enum window_ipc_command {
 };
 
 typedef struct {
-    uint8_t buffer_offset_x;
-    uint8_t buffer_offset_y;
     uint8_t buffer_width_diff; //buffer_width = width - buffer_width_diff
     uint8_t buffer_height_diff; //buffer_height = height - buffer_height_diff
 
@@ -57,7 +55,6 @@ class standard_foxos_window_t {
         standard_foxos_window_info_t window_info;
 
         void calculate_buffer_size();
-        void calculate_buffer_position();
 
         int64_t window_x = 0;
         int64_t window_y = 0;

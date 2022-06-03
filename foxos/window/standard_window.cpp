@@ -16,7 +16,6 @@ standard_foxos_window_t::standard_foxos_window_t(int64_t x, int64_t y, int64_t w
     this->window_width = width;
     this->window_height = height;
 
-    this->calculate_buffer_position();
     this->calculate_buffer_size();
 
     this->set_title(title);
@@ -63,8 +62,6 @@ int64_t standard_foxos_window_t::get_buffer_height() {
 void standard_foxos_window_t::move(int64_t x, int64_t y) {
     this->window_x = x;
     this->window_y = y;
-
-    this->calculate_buffer_position(); //Recalculate the buffer potition
 }
 
 void standard_foxos_window_t::resize(int64_t width, int64_t height) {
@@ -123,9 +120,4 @@ void standard_foxos_window_t::calculate_buffer_size() {
             this->buffer[i] = this->window_info.background_colour; //This probably should use previous data if there was any
         }
     }
-}
-
-void standard_foxos_window_t::calculate_buffer_position() {
-    this->buffer_x = this->window_x + this->window_info.buffer_offset_x;
-    this->buffer_y = this->window_y + this->window_info.buffer_offset_y;
 }
