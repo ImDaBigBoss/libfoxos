@@ -46,6 +46,8 @@ class standard_foxos_window_t {
         char* get_title();
         uint8_t get_title_length();
 
+        graphics_buffer_info_t get_buffer_info();
+
         uint32_t* buffer = 0;
         size_t buffer_size = 0;
 

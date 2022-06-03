@@ -96,6 +96,16 @@ char* standard_foxos_window_t::get_title() {
     return this->window_title;
 }
 
+graphics_buffer_info_t standard_foxos_window_t::get_buffer_info() {
+    graphics_buffer_info_t buffer_info;
+	buffer_info.buffer = this->buffer;
+	buffer_info.width = this->buffer_width;
+	buffer_info.height = this->buffer_height;
+    buffer_info.buffer_size = this->buffer_size;
+
+    return buffer_info;
+}
+
 uint8_t standard_foxos_window_t::get_title_length() {
     return this->title_length;
 }
