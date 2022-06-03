@@ -13,13 +13,22 @@ typedef struct {
 	uint32_t width;
 	uint32_t height;
 	void* buffer;
+
+	bool* frame_ready;
 } graphics_buffer_info_t;
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+bool is_foxde_running();
+graphics_buffer_info_t create_window_buffer();
+
 static inline graphics_buffer_info_t create_screen_buffer() {
+	if (is_foxde_running()) {
+		return create_window_buffer();
+	}
+
 	framebuffer_t fb = fb_info();
 	
 	graphics_buffer_info_t graphics_buffer_info;
@@ -28,6 +37,8 @@ static inline graphics_buffer_info_t create_screen_buffer() {
 	graphics_buffer_info.buffer_size = fb.buffer_size;
 	
 	graphics_buffer_info.buffer = malloc(graphics_buffer_info.buffer_size);
+
+	graphics_buffer_info.frame_ready = (bool*) NULL;
 
 	return graphics_buffer_info;
 }
@@ -50,6 +61,12 @@ static inline void fox_set_background(graphics_buffer_info_t* info, uint32_t col
 }
 
 static inline void fox_start_frame(graphics_buffer_info_t* info, bool empty_fb) {
+	if (info->frame_ready) {
+		while (*info->frame_ready) {
+			__asm__ __volatile__ ("pause" ::: "memory"); // wait until processing is finished
+		}
+	}
+
 	if (!empty_fb) {
 		copy_from_fb(info->buffer);
 	} else {
@@ -62,7 +79,11 @@ static inline void fox_end_frame(graphics_buffer_info_t* info) {
 		return;
 	}
 
-	copy_to_fb(info->buffer);
+	if (info->frame_ready) {
+		*info->frame_ready = true;
+	} else {
+		copy_to_fb(info->buffer);
+	}
 }
 
 static inline void fox_set_px_unsafe(graphics_buffer_info_t* info, uint32_t x, uint32_t y, uint32_t colour) {

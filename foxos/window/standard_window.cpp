@@ -17,6 +17,7 @@ standard_foxos_window_t::standard_foxos_window_t(int64_t x, int64_t y, int64_t w
     this->window_height = height;
 
     this->calculate_buffer_size();
+	old_frame = (uint32_t*) malloc(this->buffer_size * sizeof(uint32_t));
 
     this->set_title(title);
 }
@@ -25,6 +26,8 @@ standard_foxos_window_t::~standard_foxos_window_t() {
     if (this->buffer) { //Only free if the buffer is allocated
         free(this->buffer);
     }
+
+	free(old_frame);
 }
 
 int64_t standard_foxos_window_t::get_x() {
@@ -102,6 +105,7 @@ graphics_buffer_info_t standard_foxos_window_t::get_buffer_info() {
 	buffer_info.width = this->buffer_width;
 	buffer_info.height = this->buffer_height;
     buffer_info.buffer_size = this->buffer_size;
+	buffer_info.frame_ready = &this->frame_ready;
 
     return buffer_info;
 }

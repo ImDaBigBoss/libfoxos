@@ -53,6 +53,8 @@ class standard_foxos_window_t {
 
 		bool frame_ready = false;
 
+		uint32_t* old_frame;
+
     private:
         standard_foxos_window_info_t window_info;
 
