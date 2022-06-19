@@ -11,7 +11,7 @@
 enum window_ipc_command {
     IPC_GET_WINDOW_INFO,
 	IPC_CREATE_WINDOW,
-    IPC_DESTORY_WINDOW,
+    IPC_DESTORY_WINDOW
 };
 
 typedef struct {
@@ -23,6 +23,24 @@ typedef struct {
 
     uint32_t background_colour;
 } standard_foxos_window_info_t;
+
+
+typedef void (*foxos_button_callback_t)(int);
+class foxos_button {
+	public:
+		foxos_button(int x, int y, int width, int height, foxos_button_callback_t callback);
+
+		void draw_outline(uint32_t color, graphics_buffer_info_t* info);
+
+		foxos_button_callback_t callback;
+
+		int x;
+		int y;
+		int width;
+		int height;
+};
+
+#define MAX_WINDOW_BUTTONS 128
 
 class standard_foxos_window_t {
     public:
@@ -55,6 +73,13 @@ class standard_foxos_window_t {
 
 		uint32_t* old_frame;
 
+		int add_button(foxos_button_callback_t callback, int x, int y, int width, int height);
+		void remove_button(int button_id);
+
+		void all_buttons_draw_outline(graphics_buffer_info_t* info, uint32_t color);
+
+		void all_buttons_call_callback_if_necessary(int mouse_x, int mouse_y, int mouse_button);
+
     private:
         standard_foxos_window_info_t window_info;
 
@@ -72,6 +97,8 @@ class standard_foxos_window_t {
 
         char* window_title = 0;
         uint8_t title_length = 0;
+
+		foxos_button* buttons[MAX_WINDOW_BUTTONS] = {0};
 };
 
 bool de_running();

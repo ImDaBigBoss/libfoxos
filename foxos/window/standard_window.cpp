@@ -135,3 +135,38 @@ void standard_foxos_window_t::calculate_buffer_size() {
         }
     }
 }
+
+int standard_foxos_window_t::add_button(foxos_button_callback_t callback, int x, int y, int width, int height) {
+	for (int i = 0; i < MAX_WINDOW_BUTTONS; i++) {
+		if (this->buttons[i] == NULL) {
+			this->buttons[i] = new foxos_button(x, y, width, height, callback);
+			return i;
+		}
+	}
+
+	return -1;
+}
+
+void standard_foxos_window_t::remove_button(int button_id) {
+	delete this->buttons[button_id];
+	this->buttons[button_id] = nullptr;
+}
+
+
+void standard_foxos_window_t::all_buttons_draw_outline(graphics_buffer_info_t* info, uint32_t color) {
+	for (int i = 0; i < MAX_WINDOW_BUTTONS; i++) {
+		if (this->buttons[i] != NULL) {
+			this->buttons[i]->draw_outline(color, info);
+		}
+	}
+}
+
+void standard_foxos_window_t::all_buttons_call_callback_if_necessary(int mouse_x, int mouse_y, int mouse_button) {
+	for (int i = 0; i < MAX_WINDOW_BUTTONS; i++) {
+		if (this->buttons[i] != NULL) {
+			if (mouse_x >= this->buttons[i]->x && mouse_x <= this->buttons[i]->x + this->buttons[i]->width && mouse_y >= this->buttons[i]->y && mouse_y <= this->buttons[i]->y + this->buttons[i]->height) {
+				this->buttons[i]->callback(mouse_button);
+			}
+		}
+	}
+}
