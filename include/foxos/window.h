@@ -71,6 +71,9 @@ class standard_foxos_window_t {
 
 		bool frame_ready = false;
 
+		bool exit_button = false;
+		bool should_exit = false;
+
 		uint32_t* old_frame;
 
 		int add_button(foxos_button_callback_t callback, int x, int y, int width, int height);
@@ -79,6 +82,9 @@ class standard_foxos_window_t {
 		void all_buttons_draw_outline(graphics_buffer_info_t* info, uint32_t color);
 
 		void all_buttons_call_callback_if_necessary(int mouse_x, int mouse_y, int mouse_button);
+
+		int64_t exit_button_x = 0;
+		int64_t exit_button_y = 0;
 
     private:
         standard_foxos_window_info_t window_info;
