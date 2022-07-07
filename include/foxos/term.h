@@ -21,3 +21,5 @@ EXPOSEC void clear_line();
 
 EXPOSEC void enable_print_char();
 EXPOSEC void disable_print_char();
+EXPOSEC void lock_print_char();
+EXPOSEC void unlock_print_char();

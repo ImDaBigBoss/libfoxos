@@ -136,37 +136,103 @@ void standard_foxos_window_t::calculate_buffer_size() {
     }
 }
 
-int standard_foxos_window_t::add_button(foxos_button_callback_t callback, int x, int y, int width, int height) {
-	for (int i = 0; i < MAX_WINDOW_BUTTONS; i++) {
-		if (this->buttons[i] == NULL) {
-			this->buttons[i] = new foxos_button(x, y, width, height, callback);
-			return i;
-		}
-	}
+int standard_foxos_window_t::add_click_listner(foxos_click_callback_t callback) {
+    this->click_callback_list_length++;
+    this->click_callback_list = (foxos_click_callback_list_node_t*) realloc((void*) this->click_callback_list, sizeof(foxos_click_callback_list_node_t) * this->click_callback_list_length);
 
-	return -1;
+    if (!this->click_callback_list) {
+        return -1;
+    }
+
+    foxos_click_callback_list_node_t* node = (foxos_click_callback_list_node_t*) ((uint64_t) this->click_callback_list + (sizeof(foxos_click_callback_list_node_t) * (this->click_callback_list_length - 1)));
+    memset(node, 0, sizeof(foxos_click_callback_list_node_t));
+
+    memcpy(&node->click_callback, &callback, sizeof(foxos_click_callback_t));
+    node->id = this->click_callback_list_id++;
+    node->entire_window = true;
+
+    return node->id;
 }
 
-void standard_foxos_window_t::remove_button(int button_id) {
-	delete this->buttons[button_id];
-	this->buttons[button_id] = nullptr;
+int standard_foxos_window_t::add_click_listner(foxos_click_callback_t callback, int64_t x, int64_t y, int64_t width, int64_t height) {
+    this->click_callback_list_length++;
+    this->click_callback_list = (foxos_click_callback_list_node_t*) realloc((void*) this->click_callback_list, sizeof(foxos_click_callback_list_node_t) * this->click_callback_list_length);
+
+    if (!this->click_callback_list) {
+        return -1;
+    }
+
+    foxos_click_callback_list_node_t* node = (foxos_click_callback_list_node_t*) ((uint64_t) this->click_callback_list + (sizeof(foxos_click_callback_list_node_t) * (this->click_callback_list_length - 1)));
+    memset(node, 0, sizeof(foxos_click_callback_list_node_t));
+
+    memcpy(&node->click_callback, &callback, sizeof(foxos_click_callback_t));
+    node->id = this->click_callback_list_id++;
+    node->entire_window = false;
+
+    node->x = x;
+    node->y = y;
+    node->width = width;
+    node->height = height;
+
+    return node->id;
 }
 
+void standard_foxos_window_t::remove_click_listner(int id) {
+    if (!this->click_callback_list) {
+        return;
+    }
 
-void standard_foxos_window_t::all_buttons_draw_outline(graphics_buffer_info_t* info, uint32_t color) {
-	for (int i = 0; i < MAX_WINDOW_BUTTONS; i++) {
-		if (this->buttons[i] != NULL) {
-			this->buttons[i]->draw_outline(color, info);
-		}
-	}
+    int found_index = -1;
+    for (int i = 0; i < this->click_callback_list_length; i++) { //Find the index of the click callback in the list
+        if (this->click_callback_list[i].id == id) {
+            found_index = i;
+            break;
+        }
+    }
+
+    if (found_index == -1) { //Make sure it actually exists
+        return;
+    }
+
+    this->click_callback_list_length--;
+    if (this->click_callback_list_length == 0) { //No more callbacks, free the list
+        free(this->click_callback_list);
+        this->click_callback_list = 0;
+    } else {
+        foxos_click_callback_list_node_t* new_click_callback_list = (foxos_click_callback_list_node_t*) malloc(sizeof(foxos_click_callback_list_node_t) * this->click_callback_list_length);
+        
+        int current_id = 0;
+        for (int i = 0; i < this->click_callback_list_length; i++) { //Copy the list without the removed node
+            if (this->click_callback_list[i].id == id) {
+                continue;
+            }
+
+            memcpy(&new_click_callback_list[current_id], &this->click_callback_list[i], sizeof(foxos_click_callback_list_node_t));
+            current_id++;
+        }
+
+        assert(current_id == this->click_callback_list_length);
+
+        free(this->click_callback_list);
+        this->click_callback_list = new_click_callback_list;
+    }
 }
 
-void standard_foxos_window_t::all_buttons_call_callback_if_necessary(int mouse_x, int mouse_y, int mouse_button) {
-	for (int i = 0; i < MAX_WINDOW_BUTTONS; i++) {
-		if (this->buttons[i] != NULL) {
-			if (mouse_x >= this->buttons[i]->x && mouse_x <= this->buttons[i]->x + this->buttons[i]->width && mouse_y >= this->buttons[i]->y && mouse_y <= this->buttons[i]->y + this->buttons[i]->height) {
-				this->buttons[i]->callback(mouse_button);
-			}
-		}
-	}
+void standard_foxos_window_t::send_click(int64_t mouse_x, int64_t mouse_y, mouse_buttons_e mouse_button) {
+    if (mouse_button < 1 || mouse_button > 3) {
+        return;
+    }
+
+    for (int i = 0; i < this->click_callback_list_length; i++) {
+        foxos_click_callback_list_node_t node = this->click_callback_list[i];
+
+        if (node.entire_window) {
+            node.click_callback(mouse_x, mouse_y, mouse_button);
+        } else {
+            if (mouse_x >= node.x && mouse_x <= node.x + node.width &&
+                mouse_y >= node.y && mouse_y <= node.y + node.height) {
+                node.click_callback(mouse_x, mouse_y, mouse_button);
+            }
+        }
+    }
 }

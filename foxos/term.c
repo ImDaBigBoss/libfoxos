@@ -166,3 +166,22 @@ void disable_print_char() {
 
 	__libterm_send_command_ps2(change_keyboard_print_char_cmd, sizeof(change_keyboard_print_char_cmd));
 }
+
+
+void lock_print_char() {
+	char change_keyboard_print_char_cmd[] = {
+		0x4, // opcode change print char
+		1
+	};
+
+	__libterm_send_command_ps2(change_keyboard_print_char_cmd, sizeof(change_keyboard_print_char_cmd));
+}
+
+void unlock_print_char() {
+	char change_keyboard_print_char_cmd[] = {
+		0x4, // opcode change print char
+		0
+	};
+
+	__libterm_send_command_ps2(change_keyboard_print_char_cmd, sizeof(change_keyboard_print_char_cmd));
+}

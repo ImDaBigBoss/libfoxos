@@ -5,6 +5,7 @@
 #include <foxos/fox_graphics.h>
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #define standard_foxos_de_ipc_name (char*) "foxos_de"
 
@@ -24,23 +25,19 @@ typedef struct {
     uint32_t background_colour;
 } standard_foxos_window_info_t;
 
+typedef void (*foxos_click_callback_t) (int64_t, int64_t, mouse_buttons_e);
 
-typedef void (*foxos_button_callback_t)(int);
-class foxos_button {
-	public:
-		foxos_button(int x, int y, int width, int height, foxos_button_callback_t callback);
+typedef struct {
+    int id;
+    bool entire_window;
 
-		void draw_outline(uint32_t color, graphics_buffer_info_t* info);
+    int64_t x;
+    int64_t y;
+    int64_t width;
+    int64_t height;
 
-		foxos_button_callback_t callback;
-
-		int x;
-		int y;
-		int width;
-		int height;
-};
-
-#define MAX_WINDOW_BUTTONS 128
+    foxos_click_callback_t click_callback;
+} foxos_click_callback_list_node_t;
 
 class standard_foxos_window_t {
     public:
@@ -76,15 +73,11 @@ class standard_foxos_window_t {
 
 		uint32_t* old_frame;
 
-		int add_button(foxos_button_callback_t callback, int x, int y, int width, int height);
-		void remove_button(int button_id);
+        int add_click_listner(foxos_click_callback_t callback);
+		int add_click_listner(foxos_click_callback_t callback, int64_t x, int64_t y, int64_t width, int64_t height);
+		void remove_click_listner(int button_id);
 
-		void all_buttons_draw_outline(graphics_buffer_info_t* info, uint32_t color);
-
-		void all_buttons_call_callback_if_necessary(int mouse_x, int mouse_y, int mouse_button);
-
-		int64_t exit_button_x = 0;
-		int64_t exit_button_y = 0;
+		void send_click(int64_t mouse_x, int64_t mouse_y, mouse_buttons_e mouse_button);
 
     private:
         standard_foxos_window_info_t window_info;
@@ -104,7 +97,12 @@ class standard_foxos_window_t {
         char* window_title = 0;
         uint8_t title_length = 0;
 
-		foxos_button* buttons[MAX_WINDOW_BUTTONS] = {0};
+        int64_t exit_button_x = 0;
+		int64_t exit_button_y = 0;
+
+		foxos_click_callback_list_node_t* click_callback_list = 0;
+        int click_callback_list_length = 0;
+        int click_callback_list_id = 0;
 };
 
 bool de_running();

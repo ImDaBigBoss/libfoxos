@@ -58,7 +58,7 @@ mouse_position_t mouse_position() {
 	return (mouse_position_t) {x, y};
 }
 
-int mouse_button() {
+mouse_buttons_e mouse_button() {
 	if (sys_mouse_get_buttons == -1) {
 		sys_mouse_get_buttons = get_syscall_id("sys_mouse_get_buttons");
 	}
