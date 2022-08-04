@@ -25,6 +25,27 @@ enum signal_handlers {
 	SIG_INTR
 };
 
+typedef enum special_key {
+	left_shift,
+	left_ctrl,
+	left_alt,
+	left_gui,
+
+	right_shift,
+	right_ctrl,
+	right_alt,
+	right_gui,
+		
+	caps_lock,
+	num_lock,
+	scroll_lock,
+
+	up_arrow,
+	down_arrow,
+	left_arrow,
+	right_arrow,
+} special_key_e;
+
 typedef struct special_keys_down {
 	bool left_shift;
 	bool left_ctrl;
@@ -44,6 +65,8 @@ typedef struct special_keys_down {
 	bool down_arrow;
 	bool left_arrow;
 	bool right_arrow;
+
+	special_key_e triggered_by;
 } special_keys_down_t;
 
 EXPOSEC char** env(int mode);
