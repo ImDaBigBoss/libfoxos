@@ -29,4 +29,4 @@ EXPOSEC void copy_from_fb(void* addr);
 
 EXPOSEC void mouse_reset();
 EXPOSEC mouse_position_t mouse_position();
-EXPOSEC mouse_buttons_e mouse_button();
+EXPOSEC int mouse_button();
