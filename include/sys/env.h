@@ -16,6 +16,16 @@
 #define ENV_ACPI_REBOOT 11
 #define ENV_GET_LOADED_MODULES 12
 
+enum signal_handlers {
+	SIG_UP_ARROW = 33, // signals before signal 33 are exceptions
+	SIG_DOWN_ARROW,
+	SIG_LEFT_ARROW,
+	SIG_RIGHT_ARROW,
+	SIG_INTR
+};
+
+        
+
 EXPOSEC char** env(int mode);
 EXPOSEC void env2(int mode);
 EXPOSEC void env_set(int mode, void* data);

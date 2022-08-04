@@ -59,7 +59,7 @@ typedef struct task_t {
 	pipe stderr_pipe;
 	bool pipe_enabled;
 
-	signal_handler signals[32];
+	signal_handler signals[64];
 
 	char cwd[128];
 
