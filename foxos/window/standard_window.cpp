@@ -1,5 +1,7 @@
 #include <foxos/window.h>
 
+#include <sys/env.h>
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -16,10 +18,16 @@ standard_foxos_window_t::standard_foxos_window_t(int64_t x, int64_t y, int64_t w
     this->window_width = width;
     this->window_height = height;
 
+    this->frame_ready = false;
+
     this->calculate_buffer_size();
 	old_frame = (uint32_t*) malloc(this->buffer_size * sizeof(uint32_t));
 
     this->set_title(title);
+
+    this->click_callback_list = new list_t<foxos_click_callback_list_node_t>();
+    this->special_key_down_callback_list = new list_t<foxos_special_key_down_callback_t>();
+    this->special_key_up_callback_list = new list_t<foxos_special_key_up_callback_t>();
 }
 
 standard_foxos_window_t::~standard_foxos_window_t() {
@@ -28,6 +36,10 @@ standard_foxos_window_t::~standard_foxos_window_t() {
     }
 
 	free(old_frame);
+
+    delete this->click_callback_list;
+    delete this->special_key_down_callback_list;
+    delete this->special_key_up_callback_list;
 }
 
 int64_t standard_foxos_window_t::get_x() {
@@ -136,86 +148,33 @@ void standard_foxos_window_t::calculate_buffer_size() {
     }
 }
 
-int standard_foxos_window_t::add_click_listner(foxos_click_callback_t callback) {
-    this->click_callback_list_length++;
-    this->click_callback_list = (foxos_click_callback_list_node_t*) realloc((void*) this->click_callback_list, sizeof(foxos_click_callback_list_node_t) * this->click_callback_list_length);
+int standard_foxos_window_t::add_click_listener(foxos_click_callback_t callback) {
+    foxos_click_callback_list_node_t node;
+    memset(&node, 0, sizeof(foxos_click_callback_list_node_t));
 
-    if (!this->click_callback_list) {
-        return -1;
-    }
+    node.entire_window = true;
+    memcpy(&node.callback, &callback, sizeof(foxos_click_callback_t));
 
-    foxos_click_callback_list_node_t* node = (foxos_click_callback_list_node_t*) ((uint64_t) this->click_callback_list + (sizeof(foxos_click_callback_list_node_t) * (this->click_callback_list_length - 1)));
-    memset(node, 0, sizeof(foxos_click_callback_list_node_t));
-
-    memcpy(&node->click_callback, &callback, sizeof(foxos_click_callback_t));
-    node->id = this->click_callback_list_id++;
-    node->entire_window = true;
-
-    return node->id;
+    return this->click_callback_list->add(node);
 }
 
-int standard_foxos_window_t::add_click_listner(foxos_click_callback_t callback, int64_t x, int64_t y, int64_t width, int64_t height) {
-    this->click_callback_list_length++;
-    this->click_callback_list = (foxos_click_callback_list_node_t*) realloc((void*) this->click_callback_list, sizeof(foxos_click_callback_list_node_t) * this->click_callback_list_length);
+int standard_foxos_window_t::add_click_listener(foxos_click_callback_t callback, int64_t x, int64_t y, int64_t width, int64_t height) {
+    foxos_click_callback_list_node_t node;
+    memset(&node, 0, sizeof(foxos_click_callback_list_node_t));
 
-    if (!this->click_callback_list) {
-        return -1;
-    }
+    node.entire_window = false;
+    memcpy(&node.callback, &callback, sizeof(foxos_click_callback_t));
 
-    foxos_click_callback_list_node_t* node = (foxos_click_callback_list_node_t*) ((uint64_t) this->click_callback_list + (sizeof(foxos_click_callback_list_node_t) * (this->click_callback_list_length - 1)));
-    memset(node, 0, sizeof(foxos_click_callback_list_node_t));
+    node.x = x;
+    node.y = y;
+    node.width = width;
+    node.height = height;
 
-    memcpy(&node->click_callback, &callback, sizeof(foxos_click_callback_t));
-    node->id = this->click_callback_list_id++;
-    node->entire_window = false;
-
-    node->x = x;
-    node->y = y;
-    node->width = width;
-    node->height = height;
-
-    return node->id;
+    return this->click_callback_list->add(node);
 }
 
-void standard_foxos_window_t::remove_click_listner(int id) {
-    if (!this->click_callback_list) {
-        return;
-    }
-
-    int found_index = -1;
-    for (int i = 0; i < this->click_callback_list_length; i++) { //Find the index of the click callback in the list
-        if (this->click_callback_list[i].id == id) {
-            found_index = i;
-            break;
-        }
-    }
-
-    if (found_index == -1) { //Make sure it actually exists
-        return;
-    }
-
-    this->click_callback_list_length--;
-    if (this->click_callback_list_length == 0) { //No more callbacks, free the list
-        free(this->click_callback_list);
-        this->click_callback_list = 0;
-    } else {
-        foxos_click_callback_list_node_t* new_click_callback_list = (foxos_click_callback_list_node_t*) malloc(sizeof(foxos_click_callback_list_node_t) * this->click_callback_list_length);
-        
-        int current_id = 0;
-        for (int i = 0; i < this->click_callback_list_length; i++) { //Copy the list without the removed node
-            if (this->click_callback_list[i].id == id) {
-                continue;
-            }
-
-            memcpy(&new_click_callback_list[current_id], &this->click_callback_list[i], sizeof(foxos_click_callback_list_node_t));
-            current_id++;
-        }
-
-        assert(current_id == this->click_callback_list_length);
-
-        free(this->click_callback_list);
-        this->click_callback_list = new_click_callback_list;
-    }
+bool standard_foxos_window_t::remove_click_listener(int id) {
+    return this->click_callback_list->remove(id);
 }
 
 void standard_foxos_window_t::send_click(int64_t mouse_x, int64_t mouse_y, mouse_buttons_e mouse_button) {
@@ -223,16 +182,60 @@ void standard_foxos_window_t::send_click(int64_t mouse_x, int64_t mouse_y, mouse
         return;
     }
 
-    for (int i = 0; i < this->click_callback_list_length; i++) {
-        foxos_click_callback_list_node_t node = this->click_callback_list[i];
+    struct lambda_callback_data_t {
+        int64_t mouse_x;
+        int64_t mouse_y;
+        mouse_buttons_e mouse_button;
+    };
 
-        if (node.entire_window) {
-            node.click_callback(mouse_x, mouse_y, mouse_button);
+    lambda_callback_data_t data;
+    data.mouse_x = mouse_x;
+    data.mouse_y = mouse_y;
+    data.mouse_button = mouse_button;
+
+    this->click_callback_list->foreach([](list_t<foxos_click_callback_list_node_t>::node* n, void* lambda_data) {
+        foxos_click_callback_list_node_t* node = &n->data;
+        lambda_callback_data_t* data = (lambda_callback_data_t*) lambda_data;
+
+        if (node->entire_window) {
+            node->callback(data->mouse_x, data->mouse_y, data->mouse_button);
         } else {
-            if (mouse_x >= node.x && mouse_x <= node.x + node.width &&
-                mouse_y >= node.y && mouse_y <= node.y + node.height) {
-                node.click_callback(mouse_x, mouse_y, mouse_button);
+            if (data->mouse_x >= node->x && data->mouse_x <= node->x + node->width &&
+                data->mouse_y >= node->y && data->mouse_y <= node->y + node->height) {
+                node->callback(data->mouse_x, data->mouse_y, data->mouse_button);
             }
         }
-    }
+    }, (void*) &data);
+}
+
+int standard_foxos_window_t::add_special_key_down_listener(foxos_special_key_down_callback_t callback) {
+    return this->special_key_down_callback_list->add(callback);
+}
+
+bool standard_foxos_window_t::remove_special_key_down_listener(int id) {
+    return this->special_key_down_callback_list->remove(id);
+}
+
+void standard_foxos_window_t::send_special_key_down(special_key_e key) {
+    this->special_key_down_callback_list->foreach([](list_t<foxos_special_key_down_callback_t>::node* n, void* lambda_data) {
+        n->data(*((special_key_e*) lambda_data));
+    }, (void*) &key);
+}
+
+int standard_foxos_window_t::add_special_key_up_listener(foxos_special_key_up_callback_t callback) {
+    return this->special_key_up_callback_list->add(callback);
+}
+
+bool standard_foxos_window_t::remove_special_key_up_listener(int id) {
+    return this->special_key_up_callback_list->remove(id);
+}
+
+void standard_foxos_window_t::send_special_key_up(special_key_e key) {
+    this->special_key_up_callback_list->foreach([](list_t<foxos_special_key_up_callback_t>::node* n, void* lambda_data) {
+        n->data(*((special_key_e*) lambda_data));
+    }, (void*) &key);
+}
+
+special_keys_down_t* get_special_keys_down() {
+    return (special_keys_down_t*) env(ENV_GET_SPECIAL_KEYS);
 }

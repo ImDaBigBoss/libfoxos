@@ -1,8 +1,10 @@
 #pragma once
 
 #include <sys/ipc.h>
+#include <sys/env.h>
 
 #include <foxos/fox_graphics.h>
+#include <foxos/list.h>
 
 #include <stdint.h>
 #include <stdbool.h>
@@ -26,9 +28,10 @@ typedef struct {
 } standard_foxos_window_info_t;
 
 typedef void (*foxos_click_callback_t) (int64_t, int64_t, mouse_buttons_e);
+typedef void (*foxos_special_key_down_callback_t) (special_key_e);
+typedef void (*foxos_special_key_up_callback_t) (special_key_e);
 
 typedef struct {
-    int id;
     bool entire_window;
 
     int64_t x;
@@ -36,7 +39,7 @@ typedef struct {
     int64_t width;
     int64_t height;
 
-    foxos_click_callback_t click_callback;
+    foxos_click_callback_t callback;
 } foxos_click_callback_list_node_t;
 
 class standard_foxos_window_t {
@@ -73,11 +76,20 @@ class standard_foxos_window_t {
 
 		uint32_t* old_frame;
 
-        int add_click_listner(foxos_click_callback_t callback);
-		int add_click_listner(foxos_click_callback_t callback, int64_t x, int64_t y, int64_t width, int64_t height);
-		void remove_click_listner(int button_id);
-
+        int add_click_listener(foxos_click_callback_t callback);
+		int add_click_listener(foxos_click_callback_t callback, int64_t x, int64_t y, int64_t width, int64_t height);
+        bool remove_click_listener(int id);
 		void send_click(int64_t mouse_x, int64_t mouse_y, mouse_buttons_e mouse_button);
+
+        int add_special_key_down_listener(foxos_special_key_down_callback_t callback);
+        bool remove_special_key_down_listener(int id);
+        void send_special_key_down(special_key_e key);
+
+        int add_special_key_up_listener(foxos_special_key_up_callback_t callback);
+        bool remove_special_key_up_listener(int id);
+        void send_special_key_up(special_key_e key);
+        
+        special_keys_down_t* get_special_keys_down();
 
     private:
         standard_foxos_window_info_t window_info;
@@ -100,9 +112,9 @@ class standard_foxos_window_t {
         int64_t exit_button_x = 0;
 		int64_t exit_button_y = 0;
 
-		foxos_click_callback_list_node_t* click_callback_list = 0;
-        int click_callback_list_length = 0;
-        int click_callback_list_id = 0;
+		list_t<foxos_click_callback_list_node_t>* click_callback_list;
+        list_t<foxos_special_key_down_callback_t>* special_key_down_callback_list;
+        list_t<foxos_special_key_up_callback_t>* special_key_up_callback_list;
 };
 
 bool de_running();
