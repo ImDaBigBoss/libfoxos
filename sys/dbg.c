@@ -15,7 +15,7 @@ void dbg(char* msg) {
 }
 
 
-int debugf(const char *fmt, ...) {
+int debugf_intrnl(const char *fmt, ...) {
 	char printf_buf[1024] = { 0 };
 	va_list args;
 	int printed;
