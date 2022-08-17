@@ -251,7 +251,7 @@ static inline void fox_draw_circle_outline(graphics_buffer_info_t* info, uint32_
 }
 
 static void fox_draw_char(graphics_buffer_info_t* info, uint32_t x, uint32_t y, char c, uint32_t colour, psf1_font_t* font) {
-	char* font_ptr = (char*) font->glyph_buffer + (c * font->psf1_Header->charsize);
+	char* font_ptr = (char*) font->glyph_buffer + (c * font->header->charsize);
 
 	for (unsigned long i = y; i < y + 16; i++){
 		for (unsigned long j = x; j < x + 8; j++){
