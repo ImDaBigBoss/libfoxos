@@ -19,8 +19,10 @@
 #define ENV_GET_LOADED_MODULES 12
 #define ENV_GET_SPECIAL_KEYS 13
 
+
 enum signal_handlers {
-	SIG_SPECIAL_KEY_UP = 33, // signals before signal 33 are exceptions
+	SIG_KASSERT_FAIL = 33, // signals before signal 33 are exceptions
+	SIG_SPECIAL_KEY_UP,
 	SIG_SPECIAL_KEY_DOWN,
 	SIG_INTR
 };
