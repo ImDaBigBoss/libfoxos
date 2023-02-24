@@ -35,6 +35,12 @@ typedef void (*signal_handler)(uint8_t signum);
 typedef void (*pipe)(char* buffer, uint64_t size);
 typedef void (*system_)(char* in);
 
+typedef enum {
+	UNKNOWN_EXECUTABLE = 0,
+	ELF_EXECUTABLE,
+	FEXEC_EXECUTABLE
+} executable_type_t;
+
 typedef struct task_t {
 	s_registers regs;
 	char fxsr_state[512] __attribute__((aligned(16)));
@@ -44,7 +50,7 @@ typedef struct task_t {
 	bool kill_me; // if true task gets killed
 	bool lock; // if true task is locked and doesent get scheduled
 
-	bool is_elf; // if true task is started from an elf
+	bool is_binary; // if true task is started from a binary file
 	char** argv;
 	char** envp;
 
@@ -66,6 +72,7 @@ typedef struct task_t {
 	system_ system_method;
 
 	int running_on_cpu;
+	executable_type_t executable_type;
 } task_t;
 
-EXPOSEC task_t* spawn(const char* path, const char* argv[], const char* envp[], bool clone_cwd);
+EXPOSEC task_t* spawn(const char* path, const char* argv[], const char* envp[], executable_type_t executable_type, bool clone_cwd);
