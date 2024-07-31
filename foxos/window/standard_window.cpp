@@ -116,6 +116,7 @@ graphics_buffer_info_t standard_foxos_window_t::get_buffer_info() {
 	buffer_info.buffer = this->buffer;
 	buffer_info.width = this->buffer_width;
 	buffer_info.height = this->buffer_height;
+    buffer_info.pitch = this->buffer_width * 4;
     buffer_info.buffer_size = this->buffer_size;
 	buffer_info.frame_ready = &this->frame_ready;
 

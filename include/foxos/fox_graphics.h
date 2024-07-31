@@ -12,6 +12,7 @@ typedef struct {
 	size_t buffer_size;
 	uint32_t width;
 	uint32_t height;
+	uint32_t pitch;
 	void* buffer;
 
 	bool* frame_ready;
@@ -34,6 +35,7 @@ static inline graphics_buffer_info_t create_screen_buffer() {
 	graphics_buffer_info_t graphics_buffer_info;
 	graphics_buffer_info.width = fb.width;
 	graphics_buffer_info.height = fb.height;
+	graphics_buffer_info.pitch = fb.pitch;
 	graphics_buffer_info.buffer_size = fb.buffer_size;
 	
 	graphics_buffer_info.buffer = malloc(graphics_buffer_info.buffer_size);
@@ -49,7 +51,7 @@ static inline void fox_free_framebuffer(graphics_buffer_info_t* graphics_buffer_
 
 static inline void fox_set_background(graphics_buffer_info_t* info, uint32_t colour) {
 	uint64_t base = (uint64_t) info->buffer;
-	uint64_t bytes_per_scanline = info->width * 4;
+	uint64_t bytes_per_scanline = info->pitch;
 	uint64_t fb_height = info->height;
 
 	for (int vertical_scanline = 0; vertical_scanline < fb_height; vertical_scanline ++) {
@@ -87,7 +89,7 @@ static inline void fox_end_frame(graphics_buffer_info_t* info) {
 }
 
 static inline void fox_set_px_unsafe(graphics_buffer_info_t* info, uint32_t x, uint32_t y, uint32_t colour) {
-	*(uint32_t*)((uint64_t) info->buffer + (x * 4) + (y * 4 * info->width)) = colour;
+	*(uint32_t*)((uint64_t) info->buffer + x + (y * (info->pitch / 4))) = colour;
 }
 
 static inline void fox_set_px(graphics_buffer_info_t* info, uint32_t x, uint32_t y, uint32_t colour) {
@@ -95,7 +97,7 @@ static inline void fox_set_px(graphics_buffer_info_t* info, uint32_t x, uint32_t
 		return;
 	}
 
-	*(uint32_t*)((uint64_t) info->buffer + (x * 4) + (y * 4 * info->width)) = colour;
+	*(uint32_t*)((uint64_t) info->buffer + x + (y * (info->pitch / 4))) = colour;
 }
 
 static inline void fox_draw_rect_unsafe(graphics_buffer_info_t* info, uint32_t x, uint32_t y, uint32_t width, uint32_t height, uint32_t colour) {
